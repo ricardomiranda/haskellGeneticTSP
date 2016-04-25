@@ -1,11 +1,12 @@
 module Population where
 
+import Data.List
 import Data.Maybe
 import System.Random
 import Cities
 import City
 import Individual
-import Data.List
+import Lib
 
 -- A chromosome is a sequense of prof, time slot, room 
 type Population = [ Individual ]
@@ -30,8 +31,8 @@ calcFitnessPopulation p =
 
 ordPopulation :: Population -> Population
 ordPopulation = sort
-{-
-tournamentSelection :: (RandomGen g) => g -> Int -> Population -> (Chromosome, g)
+
+tournamentSelection :: (RandomGen g) => g -> Int -> Population -> (Individual, g)
 tournamentSelection gen n p = -- tournament size, previous population
   -- Tournament selection selects its parents by running a series of "tournaments".
   -- First, individuals are randomly selected from the population and entered into a
@@ -40,7 +41,7 @@ tournamentSelection gen n p = -- tournament size, previous population
   -- fitness for the parent.
   let (gs, gen') = randList gen n p in
   (head $ ordPopulation gs, gen')
--}{-
+{-
 selectParents :: (RandomGen g) => g -> Int -> Population 
                                -> ((Chromosome, Chromosome), g)
 selectParents g n p = -- tournament size, previous population
