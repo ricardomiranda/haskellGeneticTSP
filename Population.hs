@@ -20,8 +20,8 @@ calcFitness :: Cities -> Population -> Population
 calcFitness _ [] = []
 calcFitness cs (i:is) = i { fitness = Just (calcTotalDistance (map (findCity cs . snd) (chromosome i))) } 
                      : calcFitness cs is
-{-
-calcFitnessPopulation :: Population -> Int
+
+calcFitnessPopulation :: Population -> Float
 calcFitnessPopulation p = 
   sum $ map fit p
     where
@@ -30,7 +30,7 @@ calcFitnessPopulation p =
 
 ordPopulation :: Population -> Population
 ordPopulation = sort
--}{-
+{-
 tournamentSelection :: (RandomGen g) => g -> Int -> Population -> (Chromosome, g)
 tournamentSelection gen n p = -- tournament size, previous population
   -- Tournament selection selects its parents by running a series of "tournaments".
