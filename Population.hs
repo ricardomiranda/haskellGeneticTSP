@@ -41,15 +41,15 @@ tournamentSelection gen n p = -- tournament size, previous population
   -- fitness for the parent.
   let (gs, gen') = randList gen n p in
   (head $ ordPopulation gs, gen')
-{-
+
 selectParents :: (RandomGen g) => g -> Int -> Population 
-                               -> ((Chromosome, Chromosome), g)
+                               -> ((Individual, Individual), g)
 selectParents g n p = -- tournament size, previous population
   let (parent1, g') = tournamentSelection g n p in
   let (parent2, g'') = tournamentSelection g' n p in
   ((parent1, parent2), g'')
-
-crossover :: (RandomGen g) => g -> Float -> (Chromosome, Chromosome) -> School 
+{-
+crossover :: (RandomGen g) => g -> Float -> (Individual, Individual) -> School 
                            -> Chromosome
 crossover gen c parents s = -- crossover rate, (first parent, second parent), school
   -- Single point crossover is an alternative crossover method to the uniform cross-
