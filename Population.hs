@@ -48,10 +48,10 @@ selectParents g n p = -- tournament size, previous population
   let (parent1, g') = tournamentSelection g n p in
   let (parent2, g'') = tournamentSelection g' n p in
   ((parent1, parent2), g'')
-{-
-crossover :: (RandomGen g) => g -> Float -> (Individual, Individual) -> School 
-                           -> Chromosome
-crossover gen c parents s = -- crossover rate, (first parent, second parent), school
+
+crossover :: (RandomGen g) => g -> Float -> (Individual, Individual) -> Cities
+                           -> Individual
+crossover gen c parents s = -- crossover rate, (first parent, second parent), cities
   -- Single point crossover is an alternative crossover method to the uniform cross-
   -- over method we implemented previously. Single point crossover is a very simple
   -- crossover method in which a single position in the genome is chosen at random
@@ -63,18 +63,16 @@ crossover gen c parents s = -- crossover rate, (first parent, second parent), sc
   if c < r 
     then fst parents
     else 
-      let (c, gen'') = createChromosome gen' s in
-      let auxIndividual = newChromosome (zip [ 0 .. ] c) Nothing in
+      let (auxIndividual, gen'') = createIndividual gen' (length $ chromosome (fst parents)) in
 
       -- random swap point
-      let (pos, _) = randomR (0, length (genes (fst parents)) - 1) gen'' in
+      let (pos, _) = randomR (0, length (chromosome (fst parents)) - 1) gen'' in
       let mixGene i = if i < pos 
-          then (i, snd $ genes (fst parents) !! i)
-          else (i, snd $ genes (snd parents) !! i) in
+          then (i, snd $ chromosome (fst parents) !! i)
+          else (i, snd $ chromosome (snd parents) !! i) in
 
-      newChromosome (map (mixGene . fst ) $ genes auxIndividual) Nothing
-
-
+      newIndividual (map (mixGene . fst ) $ chromosome auxIndividual) Nothing
+{-
 offspring :: (RandomGen g) => g -> Int -> Int -> Float -> Float -> School
                            -> Population -> Population
 offspring _ 0 _ _ _ _ _ = [] 
