@@ -1,5 +1,7 @@
 module Individual where
 
+import Data.Sequence
+import Data.Foldable
 import System.Random
 import System.Random.Shuffle
 
@@ -18,9 +20,19 @@ newIndividual :: [ (Int, Int) ] -> Maybe Float -> Individual
 newIndividual gs f = Individual { chromosome = gs
                                 , fitness = f }
 
-createIndividual :: (RandomGen g) => g -> Int -> (Individual, g)
-createIndividual g n =
-  let xs' = [ 1..n ] in
-  let xs = zip [ 1.. ] (shuffle' xs' (length xs) g) in
-  let (_, g') = next g in
-  (newIndividual xs Nothing, g')
+createIndividual :: Int -> IO Individual
+createIndividual n = do -- number of cities
+  gen <- newStdGen
+  let xs' = [ 1..n ]
+  let xs = Prelude.zip [ 0.. ] (shuffle' xs' (Prelude.length xs') gen)
+  return (newIndividual xs Nothing)
+
+createIndividualConst :: Int -> Int -> Individual
+createIndividualConst n const = -- number of cities
+  let xs' = Prelude.replicate n const in
+  let xs = Prelude.zip [ 0.. ] xs' in
+  newIndividual xs Nothing
+
+modifyChromosome :: Individual -> (Int, Int) -> Individual
+modifyChromosome i g =
+  i { chromosome = toList $ update (fst g) g (fromList $ chromosome i) }

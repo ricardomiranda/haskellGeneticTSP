@@ -19,8 +19,9 @@ calcTotalDistance (c1:c2:cs) = squareDistance c1 c2
   
 calcFitness :: Cities -> Population -> Population
 calcFitness _ [] = []
-calcFitness cs (i:is) = i { fitness = Just (calcTotalDistance (map (findCity cs . snd) (chromosome i))) } 
-                     : calcFitness cs is
+calcFitness cs (i:is) = 
+  i { fitness = Just (calcTotalDistance (map (findCity cs . snd) (chromosome i))) } 
+  : calcFitness cs is
 
 calcFitnessPopulation :: Population -> Float
 calcFitnessPopulation p = 
@@ -32,88 +33,84 @@ calcFitnessPopulation p =
 ordPopulation :: Population -> Population
 ordPopulation = sort
 
-tournamentSelection :: (RandomGen g) => g -> Int -> Population -> (Individual, g)
-tournamentSelection gen n p = -- tournament size, previous population
+tournamentSelection :: Int -> Population -> IO Individual
+tournamentSelection n p = do -- tournament size, previous population
   -- Tournament selection selects its parents by running a series of "tournaments".
   -- First, individuals are randomly selected from the population and entered into a
   -- tournament. Next, these individuals can be thought to compete with each other
   -- by comparing their fitness values, then choosing the individual with the highest
   -- fitness for the parent.
-  let (gs, gen') = randList gen n p in
-  (head $ ordPopulation gs, gen')
+  is <- randList n p
+  return (head $ ordPopulation is)
 
-selectParents :: (RandomGen g) => g -> Int -> Population 
-                               -> ((Individual, Individual), g)
-selectParents g n p = -- tournament size, previous population
-  let (parent1, g') = tournamentSelection g n p in
-  let (parent2, g'') = tournamentSelection g' n p in
-  ((parent1, parent2), g'')
+selectParents :: Int -> Population -> IO (Individual, Individual)
+selectParents n p = do -- tournament size, previous population
+  parent1 <- tournamentSelection n p
+  parent2 <- tournamentSelection n p
+  return (parent1, parent2)
 
-crossover :: (RandomGen g) => g -> Float -> (Individual, Individual) -> Cities
-                           -> Individual
-crossover gen c parents s = -- crossover rate, (first parent, second parent), cities
-  -- Single point crossover is an alternative crossover method to the uniform cross-
-  -- over method we implemented previously. Single point crossover is a very simple
-  -- crossover method in which a single position in the genome is chosen at random
-  -- to define which genes come from which parent. The genetic information before
-  -- the crossover position comes from parent1, while the genetic information, after the
-  -- position, comes from parent2.
-  let r = head $ take 1 $ randoms gen :: Float in
-  let (_, gen') = next gen in 
+crossover :: Float -> (Individual, Individual) -> IO Individual
+crossover c parents = do -- crossover rate, (first parent, second parent)
+  -- With the traveling salesman problem, both the genes and the order of the genes
+  -- in the chromosome are very important. In fact, for the traveling salesman 
+  -- problem we shouldn't ever have more than one copy of a specific gene in our
+  -- chromosome. This is because it would create an invalid solution because a city
+  -- shouldn't be visited more than once on a given route. Consider a case where we
+  -- ve three cities: City A, City B and City C. A route of A,B,C is valid; however,
+  -- a route of C,B,C is not: this route visits City C twice, and also never visits
+  -- City A. Because of this, it's essential that we find and apply a crossover 
+  -- method that produces valid results for our problem.
+  -- We also need to be respectful of the ordering of the parent's chromosomes
+  -- during the crossover process. This is because the order of the chromosome
+  -- the solution's fitness. In fact, it’s only the order that matters.
+  -- Here we will aply ordered crossover.
+  gen <- newStdGen
+  let r = head $ take 1 $ randoms gen :: Float
   if c < r 
-    then fst parents
-    else 
-      let (auxIndividual, gen'') = createIndividual gen' (length $ chromosome (fst parents)) in
+    then return (fst parents)
+    else return (snd parents)
+	
+offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
+offspring 0 _ _ _ _ = return [] 
+offspring n tSize m c p = do -- elite, tournament size, mutation rate,
+                             -- crossover rate, previous population
+  parents <- selectParents tSize p
+  i <- crossover c parents
+  individual <- mutation m i
+  rest <- offspring (n-1) tSize m c p
 
-      -- random swap point
-      let (pos, _) = randomR (0, length (chromosome (fst parents)) - 1) gen'' in
-      let mixGene i = if i < pos 
-          then (i, snd $ chromosome (fst parents) !! i)
-          else (i, snd $ chromosome (snd parents) !! i) in
+  return (individual : rest)
 
-      newIndividual (map (mixGene . fst ) $ chromosome auxIndividual) Nothing
-{-
-offspring :: (RandomGen g) => g -> Int -> Int -> Float -> Float -> School
-                           -> Population -> Population
-offspring _ 0 _ _ _ _ _ = [] 
-offspring g n tSize m c s p = -- elite, tournament size, mutation rate, crossover rate, 
-                              -- school, previous population
-  let (parents, g') = selectParents g tSize p in
-  let individual = mutation g' m s $ crossover g' c parents s in
+mutation :: Float -> Individual -> IO Individual
+mutation m i = do -- mutation rate, individual
+  -- Swap mutation, is an algorithm that will simply swap the genetic information at
+  -- two points. Swap mutation works by looping though the genes in the individual’s
+  -- chromosome with each gene being considered for mutation determined by the 
+  -- mutation rate. If a gene is selected for mutation, another random gene in the
+  -- chromosome is picked and then their positions are swapped.
 
-  let (_, g'') = next g in
-  individual : offspring g'' (n-1) tSize m c s p
+  -- Swap genes according to mutation rate (pos1 with pos2)
+  let swapGene i pos1 = case pos1 of
+        (-1) -> return i -- chromosome totally scanned
+        otehrwise -> do
+          gen <- newStdGen
+          let r = head $ drop (snd $ chromosome i !! pos1) $ randoms gen :: Float
+          if m < r
+            then swapGene i (pos1-1)
+            else do
+	      gen' <- newStdGen
+              let pos2 = head $ drop (snd $ chromosome i !! pos1) 
+                       $ randomRs (0, length (chromosome i) - 1) gen' :: Int
+              let g1 = (pos1, snd $ chromosome i !! pos2)
+              let g2 = (pos2, snd $ chromosome i !! pos1)
+              let i' = modifyChromosome (modifyChromosome i g2) g1 -- swaping genes 
+              swapGene i' (pos1-1)
+  swapGene i (length (chromosome i) - 1)
 
-mutation :: (RandomGen g) => g -> Float -> School -> Chromosome -> Chromosome
-mutation gen m s i = -- mutation rate, school, individual
-  -- In uniform crossover, genes are selected at random from an existing and valid parent.
-  -- The parent might not be the fittest individual in the population, but at least it's
-  -- valid.
-  -- Here we create a new random but valid individual and essentially run uniform crossover
-  -- to achieve mutation! Afterward we select genes from the random Individual to copy into 
-  -- the Individual to be mutated. This technique is called uniform mutation, and makes
-  -- sure that all of our mutated individuals are fully valid, never selecting a gene that 
-  -- doesn't make sense.
-
-  -- Create random individual to swap genes with
-  let (c, gen') = createChromosome gen s in
-  let randomIndividual = newChromosome (zip [ 0 .. ] c) Nothing in
-
-  -- Swap genes according to mutation rate
-  let swapGene gen g =
-        let r = head $ drop (snd g) $ randoms gen :: Float in
-        if m < r
-          then g
-	  else (fst g, snd $ genes randomIndividual !! fst g) in
-
-  newChromosome (map (swapGene gen') $ genes i) Nothing 
-
-newGeneration :: (RandomGen g) => g -> Int -> Int -> Float -> Float
-                               -> School -> Population -> IO (Population, g)
-newGeneration g e tSize m c s p = do -- elite, tournament size, mutation rate,
-                                     -- crossover rate, school, previous population
-  let pElite = take e $ ordPopulation p
-  let p' = offspring g (length p - e) tSize m c s p
-  let (_, g') = next g
-  return (calcFitness s $ pElite ++ p', g')
-  -}
+newGeneration :: Int -> Int -> Float -> Float
+              -> Cities -> Population -> IO Population
+newGeneration e tSize m c cs p = do -- elite, tournament size, mutation rate,
+                                    -- crossover rate, cities, previous population
+    let pElite = take e $ ordPopulation p 
+    p' <- offspring (length p - e) tSize m c p
+    return (calcFitness cs $ pElite ++ p')

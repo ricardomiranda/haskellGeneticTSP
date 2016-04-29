@@ -3,13 +3,8 @@ module Lib where
 import System.Random
 import Data.List
 
-rand :: (RandomGen g) => g -> [ a ] -> (a, g)
-rand g xs =
-  let (i, g') = randomR (0, length xs - 1) g in
-  (xs !! i, g')
-
-randList :: (RandomGen g) => g -> Int -> [ a ] -> ([ a ], g)
-randList g n xs =
-  let is = take n . nub $ randomRs (0, length xs - 1) g in
-  let (_, g') = next g in
-  (map (\ i -> xs !! i) is, g')
+randList :: Int -> [ a ] -> IO [ a ]
+randList n xs = do
+  gen <- newStdGen
+  let is = take n . nub $ randomRs (0, length xs - 1) gen :: [ Int ]
+  return (map (\ i -> xs !! i) is)
