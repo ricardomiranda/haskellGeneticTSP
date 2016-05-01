@@ -67,8 +67,32 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
   gen <- newStdGen
   let r = head $ take 1 $ randoms gen :: Float
   if c < r 
-    then return (fst parents)
-    else return (snd parents)
+    then do
+        return (snd parents)
+    else do
+      let emptyGene = -99
+      gen' <- newStdGen
+      let rs = take 2 . nub $ randomRs (0, length (chromosome $ fst parents) - 1) gen' :: [ Int ]
+      let pos1 = minimum rs
+      let pos2 = maximum rs
+      let auxIndividual = createIndividualConst (length (chromosome $ fst parents)) emptyGene
+
+      -- fst parent contribution
+      let individual = auxIndividual { chromosome = map (\ g -> if fst g >= pos1 && fst g <= pos2 then g else (chromosome $ auxIndividual) !! fst g ) 
+                                                        (chromosome $ fst parents) }
+
+      -- snd parent contribution
+      let individual' i pos posSndParent = if pos == length (chromosome $ snd parents) - 1
+            then do return i -- offspring chromosome complete
+            else if pos >= pos1 && pos <= pos2
+              then individual' i (pos+1) posSndParent
+              else if elem (snd $ (chromosome $ snd parents) !! posSndParent) (map (\ g -> snd g) (chromosome $ i))
+                then individual' i pos (mod (posSndParent+1) (length (chromosome i)))
+                else individual' (modifyChromosome i ((chromosome $ snd parents) !! posSndParent))
+                             (pos+1) (mod (posSndParent+1) (length (chromosome i)))
+      individual'' <- individual' individual 0 (mod (pos2+1) (length (chromosome $ snd parents)))
+     
+      return (individual'')
 	
 offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
 offspring 0 _ _ _ _ = return [] 
