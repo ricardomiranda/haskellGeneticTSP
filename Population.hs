@@ -52,35 +52,6 @@ selectParents n p = do -- tournament size, previous population
 
 crossover :: Float -> (Individual, Individual) -> IO Individual
 crossover c parents = do -- crossover rate, (first parent, second parent)
-  gen <- newStdGen
-  let r = head $ take 1 $ randoms gen :: Float
-  if c < r 
-    then do
-        return (fst parents)
-    else do
-      let emptyGene = -1 
-      gen' <- newStdGen
-      let rs = take 2 $ randomRs (0, length (chromosome $ fst parents) - 1) gen' :: [ Int ]
-      let pos1 = minimum rs
-      let pos2 = maximum rs
-
-      let ( _, chromosomeFstParent ) = unzip (chromosome $ fst parents) 
-      let ( _, chromosomeSndParent ) = unzip (chromosome $ snd parents) 
-
-      -- fst parent contribution
-      let fstParentContrib = drop pos1 $ take pos2 $ chromosomeFstParent
-      let sndParentContrib = [ x | x <- sndParentContrib, notElem x fstParentContrib ]
-      let childChromosome =  (take pos1 $ sndParentContrib)
-                ++ (fstParentContrib)
-		++ (drop pos2 $ sndParentContrib)
-
-      let child = newIndividual (zip [ 0.. ] childChromosome) Nothing
-
-      return (child)
-
-{-
-crossover :: Float -> (Individual, Individual) -> IO Individual
-crossover c parents = do -- crossover rate, (first parent, second parent)
   -- With the traveling salesman problem, both the genes and the order of the genes
   -- in the chromosome are very important. In fact, for the traveling salesman 
   -- problem we shouldn't ever have more than one copy of a specific gene in our
@@ -98,32 +69,30 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
   let r = head $ take 1 $ randoms gen :: Float
   if c < r 
     then do
-        return (snd parents)
+        return (fst parents)
     else do
-      let emptyGene = -99
+      let emptyGene = -1 
       gen' <- newStdGen
-      let rs = take 2 . nub $ randomRs (0, length (chromosome $ fst parents) - 1) gen' :: [ Int ]
+      let rs = take 2 $ randomRs (0, length (chromosome $ fst parents)) gen' :: [ Int ]
       let pos1 = minimum rs
       let pos2 = maximum rs
-      let auxIndividual = createIndividualConst (length (chromosome $ fst parents)) emptyGene
+
+      let ( _, chromosomeFstParent ) = unzip (chromosome $ fst parents) 
+      let ( _, chromosomeSndParent ) = unzip (chromosome $ snd parents) 
 
       -- fst parent contribution
-      let individual = auxIndividual { chromosome = map (\ g -> if fst g >= pos1 && fst g <= pos2 then g else (chromosome $ auxIndividual) !! fst g ) 
-                                                        (chromosome $ fst parents) }
+      let fstParentContrib = drop pos1 $ take pos2 $ chromosomeFstParent
+      let sndParentContrib = [ x | x <- chromosomeSndParent, notElem x fstParentContrib ]
+      let childChromosome =  (take pos1 $ sndParentContrib)
+                          ++ fstParentContrib
+		          ++ (drop pos1 $ sndParentContrib)
 
-      -- snd parent contribution
-      let individual' i pos posSndParent = if pos == length (chromosome $ snd parents) - 1
-            then do return i -- offspring chromosome complete
-            else if pos >= pos1 && pos <= pos2
-              then individual' i (pos+1) posSndParent
-              else if elem (snd $ (chromosome $ snd parents) !! posSndParent) (map (\ g -> snd g) (chromosome $ i))
-                then individual' i pos (mod (posSndParent+1) (length (chromosome i)))
-                else individual' (modifyChromosome i ((chromosome $ snd parents) !! posSndParent))
-                             (pos+1) (mod (posSndParent+1) (length (chromosome i)))
-      individual'' <- individual' individual 0 (mod (pos2+1) (length (chromosome $ snd parents)))
-     
-      return (individual'')
--}
+      let child = newIndividual (zip [ 0.. ] childChromosome) Nothing
+
+      if length (chromosome $ fst parents) /= length (chromosome $ child)
+        then error ("Length mismatch, module Population, function crossover. \n")
+        else return (child)
+
 offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
 offspring 0 _ _ _ _ = return [] 
 offspring n tSize m c p = do -- number of children, tournament size, mutation rate,
