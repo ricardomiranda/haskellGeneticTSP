@@ -69,11 +69,14 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
 
       -- fst parent contribution
       let fstParentContrib = drop pos1 $ take pos2 $ chromosomeFstParent
-      let child =  (take pos1 $ chromosomeSndParent)
+      let sndParentContrib = [ x | x <- sndParentContrib, notElem x fstParentContrib ]
+      let childChromosome =  (take pos1 $ sndParentContrib)
                 ++ (fstParentContrib)
-		++ (drop pos2 $ chromosomeSndParent)
+		++ (drop pos2 $ sndParentContrib)
 
-      return (fst parents)
+      let child = newIndividual (zip [ 0.. ] childChromosome) Nothing
+
+      return (child)
 
 {-
 crossover :: Float -> (Individual, Individual) -> IO Individual
