@@ -1,5 +1,6 @@
 module Population where
 
+
 import Data.List
 import Data.Maybe
 import System.Random
@@ -51,6 +52,32 @@ selectParents n p = do -- tournament size, previous population
 
 crossover :: Float -> (Individual, Individual) -> IO Individual
 crossover c parents = do -- crossover rate, (first parent, second parent)
+  gen <- newStdGen
+  let r = head $ take 1 $ randoms gen :: Float
+  if c < r 
+    then do
+        return (fst parents)
+    else do
+      let emptyGene = -1 
+      gen' <- newStdGen
+      let rs = take 2 $ randomRs (0, length (chromosome $ fst parents) - 1) gen' :: [ Int ]
+      let pos1 = minimum rs
+      let pos2 = maximum rs
+
+      let ( _, chromosomeFstParent ) = unzip (chromosome $ fst parents) 
+      let ( _, chromosomeSndParent ) = unzip (chromosome $ snd parents) 
+
+      -- fst parent contribution
+      let fstParentContrib = drop pos1 $ take pos2 $ chromosomeFstParent
+      let child =  (take pos1 $ chromosomeSndParent)
+                ++ (fstParentContrib)
+		++ (drop pos2 $ chromosomeSndParent)
+
+      return (fst parents)
+
+{-
+crossover :: Float -> (Individual, Individual) -> IO Individual
+crossover c parents = do -- crossover rate, (first parent, second parent)
   -- With the traveling salesman problem, both the genes and the order of the genes
   -- in the chromosome are very important. In fact, for the traveling salesman 
   -- problem we shouldn't ever have more than one copy of a specific gene in our
@@ -93,10 +120,10 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
       individual'' <- individual' individual 0 (mod (pos2+1) (length (chromosome $ snd parents)))
      
       return (individual'')
-	
+-}
 offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
 offspring 0 _ _ _ _ = return [] 
-offspring n tSize m c p = do -- elite, tournament size, mutation rate,
+offspring n tSize m c p = do -- number of children, tournament size, mutation rate,
                              -- crossover rate, previous population
   parents <- selectParents tSize p
   i <- crossover c parents
