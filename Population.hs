@@ -68,8 +68,7 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
   gen <- newStdGen
   let r = head $ take 1 $ randoms gen :: Float
   if c < r 
-    then do
-        return (fst parents)
+    then return (fst parents)
     else do
       let emptyGene = -1 
       gen' <- newStdGen
@@ -81,17 +80,17 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
       let ( _, chromosomeSndParent ) = unzip (chromosome $ snd parents) 
 
       -- fst parent contribution
-      let fstParentContrib = drop pos1 $ take pos2 $ chromosomeFstParent
+      let fstParentContrib = drop pos1 $ take pos2 chromosomeFstParent
       let sndParentContrib = [ x | x <- chromosomeSndParent, notElem x fstParentContrib ]
-      let childChromosome =  (take pos1 $ sndParentContrib)
+      let childChromosome =  take pos1 sndParentContrib
                           ++ fstParentContrib
-		          ++ (drop pos1 $ sndParentContrib)
+		          ++ drop pos1 sndParentContrib
 
       let child = newIndividual (zip [ 0.. ] childChromosome) Nothing
 
-      if length (chromosome $ fst parents) /= length (chromosome $ child)
-        then error ("Length mismatch, module Population, function crossover. \n")
-        else return (child)
+      if length (chromosome $ fst parents) /= length (chromosome child)
+        then error "Length mismatch, module Population, function crossover. \n"
+        else return child
 
 offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
 offspring 0 _ _ _ _ = return [] 
