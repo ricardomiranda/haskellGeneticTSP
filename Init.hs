@@ -1,8 +1,6 @@
 module Init where
 
 import System.Random
--- import Data.List
--- import Data.Char
 import Lib
 import Cities
 import City
@@ -22,14 +20,11 @@ newMap i = do
 
   return (city : rest)
 
-createPopulation :: Int -> Int -> IO Population -- population size,
-                                                                      -- number of cities
-createPopulation size nbrCities = do
-  let createPopulation' i =
-        if i == 0
-          then return []
-          else do
-            individual <- createIndividual nbrCities
-	    rest <- createPopulation' (i-1)
-            return (individual : rest)
-  createPopulation' size
+createPopulation :: Int -> Int -> IO Population
+createPopulation size nbrCities = -- population size, number of cities
+  if size == 0
+    then return []
+  else do
+    individual <- createIndividual nbrCities
+    rest <- createPopulation (size-1) nbrCities
+    return (individual : rest)
