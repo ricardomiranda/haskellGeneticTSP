@@ -24,6 +24,8 @@ executable geneticTSP
                        random-shuffle,
                        sequence,
                        containers,
-                       easyplot
+                       easyplot,
+                       parallel
+  ghc-options:         -O2 -threaded -rtsopts -eventlog
   -- hs-source-dirs:      
   default-language:    Haskell2010

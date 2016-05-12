@@ -1,6 +1,5 @@
 module Population where
 
-
 import Data.List
 import Data.Maybe
 import System.Random
@@ -86,7 +85,7 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
                           ++ fstParentContrib
 		          ++ drop pos1 sndParentContrib
 
-      let child = newIndividual (zip [ 0.. ] childChromosome) Nothing
+      let child = newIndividual (zip [ 0.. ] childChromosome)
 
       if length (chromosome $ fst parents) /= length (chromosome child)
         then error "Length mismatch, module Population, function crossover. \n"
@@ -96,9 +95,7 @@ offspring :: Int -> Int -> Float -> Float -> Population -> IO Population
 offspring 0 _ _ _ _ = return [] 
 offspring n tSize m c p = do -- number of children, tournament size, mutation rate,
                              -- crossover rate, previous population
-  parents <- selectParents tSize p
-  i <- crossover c parents
-  individual <- mutation m i
+  individual <- selectParents tSize p >>= crossover c >>= mutation m
   rest <- offspring (n-1) tSize m c p
 
   return (individual : rest)
