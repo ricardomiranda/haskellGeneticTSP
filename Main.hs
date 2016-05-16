@@ -27,9 +27,9 @@ main = do
     then helpMessage
     else case length args of
       7 -> do
-        let iter = read $ head args :: Int-- max number of generations
+        let iter = read $ head args :: Int -- max number of generations
         let nbrCities = read (args !! 1) :: Int -- number of cities
-        let size = read (args !! 2) :: Int-- population size
+        let size = read (args !! 2) :: Int -- population size
         let mutationRate = read (args !! 3) :: Float
         let crossoverRate = read (args !! 4) :: Float
         let elite = read (args !! 5) :: Int -- elitism allows the fittest individual,
@@ -71,17 +71,16 @@ loop n iter e tSize m c cs p = do -- curent iteration, max iterations,
   let result = (n, f, calcFitnessPopulation p', length p')
   rest <- loop (n+1) (iter-1) e tSize m c cs p' 
 
-  return (result : rest ) 
+  return (result : rest) 
 
 printGraphic :: [ (Int, Float, Float, Int) ] -> IO Bool
 printGraphic fitness =
   plot (PNG "Fitness.png") 
-    [ Data2D [ Title "Population Fitness", Style Lines, Color Red ] []  
+    [ Data2D [ Title "Mean Population Fitness", Style Lines, Color Red ] []  
       $ map (\ (i, _, fp, _) -> (fromIntegral i, fp) ) fitness
     , Data2D [ Title "Best Individual Fitness", Style Lines, Color Blue ] []
       $ map (\ (i, f, _, _) -> (fromIntegral i, f) ) fitness
-    , Data2D [ Title "Total Population", Style Lines, Color Green ] []
-      $ map (\ (i, _, _, size) -> (fromIntegral i, fromIntegral size) ) fitness ]
+    ]
 
 printSolution :: Individual -> Cities -> IO ()
 printSolution individual cities = do
@@ -94,7 +93,7 @@ printSolution individual cities = do
   putStrLn "Cities are:"
   mapM_ print outputCities
   putStrLn "--------------------"
-  putStrLn ("Total fitness: " ++ show (Just (fitness individual)))
+  putStrLn ("Total fitness: " ++ show (fitness individual))
   putStrLn "--------------------"
   putStrLn "Best solution is:"
   mapM_ print outputTSP

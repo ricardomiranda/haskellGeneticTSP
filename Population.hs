@@ -25,7 +25,7 @@ calcFitness cs (i:is) =
 
 calcFitnessPopulation :: Population -> Float
 calcFitnessPopulation p = 
-  sum $ map fit p
+  (sum $ map fit p) / fromIntegral (length p)
     where
       fit x = fromMaybe (error "Clashes unknown, module Population, function calcFitnessPopulation") 
                         (fitness x)
@@ -69,7 +69,6 @@ crossover c parents = do -- crossover rate, (first parent, second parent)
   if c < r 
     then return (fst parents)
     else do
-      let emptyGene = -1 
       gen' <- newStdGen
       let rs = take 2 $ randomRs (0, length (chromosome $ fst parents)) gen' :: [ Int ]
       let pos1 = minimum rs

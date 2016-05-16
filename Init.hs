@@ -21,10 +21,8 @@ newMap i = do
   return (city : rest)
 
 createPopulation :: Int -> Int -> IO Population
-createPopulation size nbrCities = -- population size, number of cities
-  if size == 0
-    then return []
-  else do
-    individual <- createIndividual nbrCities
-    rest <- createPopulation (size-1) nbrCities
-    return (individual : rest)
+createPopulation 0 _ = return []
+createPopulation size nbrCities = do -- population size, number of cities
+  individual <- createIndividual nbrCities
+  rest <- createPopulation (size-1) nbrCities
+  return (individual : rest)
