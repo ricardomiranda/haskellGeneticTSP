@@ -17,9 +17,6 @@ helpMessage = do
   putStrLn "geneticClasses, max number of iterations, number of cities, size of the population, mutation rate, crossover rate, number of elite elements that are preserved butween generations, tournament size"
   putStrLn "geneticClasses Int Int Int Float Float Int Int"
   
-readn :: String -> Int
-readn s = read s :: Int
-
 main :: IO ()
 main = do 
   args <- getArgs
