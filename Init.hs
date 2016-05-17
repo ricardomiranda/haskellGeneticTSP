@@ -7,6 +7,7 @@ import City
 import Individual
 import Population
 
+max_ :: Float
 max_ = 100.0
 
 newMap :: Int -> IO Cities -- number of cities
