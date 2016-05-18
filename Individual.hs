@@ -27,12 +27,6 @@ createIndividual n = do -- number of cities
   let xs = Prelude.zip [ 0.. ] (shuffle' xs' (Prelude.length xs') gen)
   return (newIndividual xs)
 
-createIndividualConst :: Int -> Int -> Individual
-createIndividualConst n const = -- number of cities
-  let xs' = Prelude.replicate n const in
-  let xs = Prelude.zip [ 0.. ] xs' in
-  newIndividual xs
-
 modifyChromosome :: Individual -> (Int, Int) -> Individual
 modifyChromosome i g =
   i { chromosome = toList $ update (fst g) g (fromList $ chromosome i) }
