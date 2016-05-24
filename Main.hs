@@ -36,8 +36,11 @@ main = do
         let tournamentSize = read (args !! 6) :: Int
   
         cities <- newMap nbrCities
+        printMap cities
+
 	p <- createPopulation size nbrCities
         let population = calcFitness cities p
+        printRoute (head $ ordPopulation population) cities "InitialRoute.png"
   
         fitness <- loop 0 iter elite tournamentSize mutationRate 
                         crossoverRate cities population
@@ -56,6 +59,7 @@ loop :: Int -> Int -> Int -> Int -> Float -> Float
      -> Cities -> Population -> IO [ (Int, Float, Float, Int) ]
 loop _ 0 _ _ _ _ cs p = do
   printSolution (head $ ordPopulation p) cs
+  printRoute (head $ ordPopulation p) cs "FinalRoute.png"
   return []
 loop n iter e tSize m c cs p = do -- curent iteration, max iterations,
                                   -- elite, tournament size, mutation rate, 
