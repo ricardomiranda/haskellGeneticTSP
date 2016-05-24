@@ -1,4 +1,4 @@
-(C) Ricardo Crist√v√o Miranda, 2016.
+(C) Ricardo Cristovao Miranda, 2016.
 
 This program is a Haskell solution to the problem described in Genetic Algorithms in 
 Java Basics, Lee Jacobson, Burak Kanber, chapter 4, Traveling Salesman.
